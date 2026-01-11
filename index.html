@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Ultra Pro Max Plus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+    <style>
+        :root {
+            --primary: #6F4E37; --primary-dark: #4E342E; 
+            --bg: #F5F5F5; --text: #333; --danger: #e74c3c;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); margin: 0; padding-top: 70px; color: var(--text); padding-bottom: 80px;}
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--primary); color: white; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000;
+        }
+        .nav-links button {
+            background: transparent; border: none; color: rgba(255,255,255,0.7);
+            font-size: 1rem; margin-left: 15px; cursor: pointer; font-weight: bold; padding: 5px 10px;
+        }
+        .nav-links button.active { color: white; border-bottom: 2px solid white; }
+
+        /* Sections */
+        .view-section { display: none; padding: 15px; max-width: 800px; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cards */
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); position: relative; }
+        .log-card { cursor: pointer; transition: transform 0.2s; border-left: 5px solid var(--primary); }
+        .log-card:hover { transform: translateY(-3px); }
+
+        /* Pagination Styles (NEW) */
+        .pagination-container {
+            display: flex; justify-content: center; align-items: center; margin-top: 20px; gap: 15px;
+        }
+        .pagination-btn {
+            background: white; border: 1px solid #ddd; color: var(--primary); padding: 8px 16px;
+            border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .pagination-btn:hover:not(:disabled) { background: var(--primary); color: white; transform: translateY(-2px); }
+        .pagination-btn:disabled { background: #f5f5f5; color: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
+        .page-info { font-size: 0.9rem; color: #666; font-weight: 500; }
+
+        /* Manage List Item */
+        .manage-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #eee; padding: 15px 0; 
+        }
+        .manage-item:last-child { border-bottom: none; }
+        .btn-group button { margin-left: 5px; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; }
+        .btn-edit { background: #f39c12; color: white; }
+        .btn-delete { background: var(--danger); color: white; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        /* Buttons */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 900; transition: transform 0.2s;
+        }
+        .fab:hover { transform: scale(1.1); background: var(--primary-dark); }
+        
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+        .btn-secondary { background: #95a5a6; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .btn-danger-outline { background: white; color: var(--danger); border: 1px solid var(--danger); width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+
+        /* Tags */
+        .tag { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; color: #666; margin-right: 5px; }
+        .rating-star { color: #f39c12; font-weight: bold; }
+
+        /* Manage Tabs */
+        .tab-header { display: flex; margin-bottom: 20px; background: #fff; padding: 5px; border-radius: 10px; box-shadow: var(--shadow); }
+        .tab-btn { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; color: #888; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        
+        /* Loading & Toast */
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body>
+
+    <nav class="top-bar">
+        <div style="font-size: 1.2rem; font-weight: bold;">☕ Coffee Log</div>
+        <div class="nav-links">
+            <button onclick="switchView('home')" id="nav-home" class="active">紀錄</button>
+            <button onclick="switchView('manage')" id="nav-manage">管理資料</button>
+        </div>
+    </nav>
+
+    <section id="view-home" class="view-section active">
+        <div class="card" style="padding: 10px; display: flex; gap: 10px;">
+            <input type="text" id="searchInput" placeholder="搜尋豆名、風味..." oninput="renderLogs(true)">
+            <select id="searchRating" onchange="renderLogs(true)" style="width: 80px;">
+                <option value="">全</option>
+                <option value="5">5★</option>
+                <option value="4">4★+</option>
+            </select>
+        </div>
+
+        <div id="loadingLogs" class="spinner"></div>
+        <div id="logListContainer"></div>
+        
+        <div id="paginationControls" class="pagination-container" style="display:none;">
+            <button class="pagination-btn" id="btnPrev" onclick="changePage(-1)">❮ 上一頁</button>
+            <span class="page-info" id="pageInfo">第 1 頁 / 共 1 頁</span>
+            <button class="pagination-btn" id="btnNext" onclick="changePage(1)">下一頁 ❯</button>
+        </div>
+        
+        <div class="fab" onclick="openLogForm()">+</div>
+    </section>
+
+    <section id="view-log-form" class="view-section">
+        <h2 id="logFormTitle">新增紀錄</h2>
+        <div class="card">
+            <form onsubmit="event.preventDefault(); submitLog();">
+                <input type="hidden" id="logId">
+                <input type="hidden" id="logTimestamp">
+                
+                <div class="form-group">
+                    <label>選擇咖啡豆 *</label>
+                    <select id="logBeanId" required><option>載入中...</option></select>
+                </div>
+                
+                <div class="form-group">
+                    <label>評分 *</label>
+                    <select id="logRating" required>
+                        <option value="5">5 - 完美</option>
+                        <option value="4">4 - 好喝</option>
+                        <option value="3">3 - 普通</option>
+                        <option value="2">2 - 尚可</option>
+                        <option value="1">1 - 難喝</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div><label>磨豆機</label><select id="logGrinderId"></select></div>
+                    <div><label>濾杯</label><select id="logBrewerId"></select></div>
+                </div>
+
+                <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div><label>水溫</label><input type="number" id="logTemp" placeholder="92"></div>
+                    <div><label>時間</label><input type="text" id="logTime" placeholder="2:30"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>風味筆記</label>
+                    <textarea id="logNotes" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btnSaveLog">儲存</button>
+                <button type="button" class="btn-danger-outline" id="btnDeleteLog" onclick="deleteLog()" style="display:none;">刪除此紀錄</button>
+                <button type="button" class="btn-secondary" onclick="switchView('home')">取消</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="view-manage" class="view-section">
+        <div class="tab-header">
+            <div class="tab-btn active" onclick="switchManageTab('bean')">咖啡豆</div>
+            <div class="tab-btn" onclick="switchManageTab('equip')">器材</div>
+        </div>
+
+        <div id="manage-bean-panel">
+            <button class="btn-primary" onclick="openMasterForm('bean')" style="margin-bottom: 20px;">+ 新增咖啡豆</button>
+            <div id="beanList" class="card">載入中...</div>
+        </div>
+
+        <div id="manage-equip-panel" style="display:none;">
+            <button class="btn-primary" onclick="openMasterForm('equip')" style="margin-bottom: 20px;">+ 新增器材</button>
+            <div id="equipList" class="card">載入中...</div>
+        </div>
+    </section>
+
+    <section id="view-master-form" class="view-section">
+        <h2 id="masterFormTitle">新增資料</h2>
+        <div class="card">
+            <form onsubmit="event.preventDefault(); submitMasterData();">
+                <input type="hidden" id="masterType"> <input type="hidden" id="masterId">
+                
+                <div id="field-bean">
+                    <div class="form-group"><label>豆名 *</label><input type="text" id="mBeanName"></div>
+                    <div class="form-group"><label>烘焙商</label><input type="text" id="mBeanRoaster"></div>
+                    <div class="form-group"><label>烘焙度</label>
+                        <select id="mBeanRoast">
+                            <option value="淺焙">淺焙</option>
+                            <option value="淺中焙">淺中焙</option>
+                            <option value="中焙">中焙</option>
+                            <option value="中深焙">中深焙</option>
+                            <option value="深焙">深焙</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>烘焙日期</label><input type="date" id="mBeanDate"></div>
+                    <div class="form-group"><label>豆子描述</label><textarea id="mBeanDesc" rows="3"></textarea></div>
+                </div>
+
+                <div id="field-equip" style="display:none;">
+                    <div class="form-group"><label>種類</label>
+                        <select id="mEquipType">
+                            <option value="GRINDER">磨豆機</option>
+                            <option value="BREWER">濾杯</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>名稱 *</label><input type="text" id="mEquipName"></div>
+                    <div class="form-group"><label>品牌</label><input type="text" id="mEquipBrand"></div>
+                    <div class="form-group"><label>器材描述</label><textarea id="mEquipDesc" rows="2"></textarea></div>
+                </div>
+
+                <button type="submit" class="btn-primary">儲存</button>
+                <button type="button" class="btn-danger-outline" id="btnDeleteMaster" onclick="deleteMasterData()" style="display:none;">刪除</button>
+                <button type="button" class="btn-secondary" onclick="switchView('manage')">取消</button>
+            </form>
+        </div>
+    </section>
+
+    <div id="toast">提示</div>
+
+    <script>
+        // ⚠️ 請換成你的 API URL
+        const API_URL = "https://u68hm4w3qi.execute-api.us-east-1.amazonaws.com/prod";
+        const USER_ID = "student_tester"; 
+
+        // 全域資料暫存
+        let gData = { logs: [], beans: [], equips: [] };
+        
+        // 分頁變數 (NEW)
+        let currentPage = 1;
+        const itemsPerPage = 6; 
+
+        window.onload = async () => {
+            await Promise.all([loadLogs(), loadDropdowns()]);
+            renderMasterLists();
+        };
+
+        // --- 視圖切換 ---
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewName).classList.add('active');
+            
+            document.querySelectorAll('.nav-links button').forEach(el => el.classList.remove('active'));
+            if(viewName === 'home') document.getElementById('nav-home').classList.add('active');
+            if(viewName === 'manage') document.getElementById('nav-manage').classList.add('active');
+        }
+
+        function switchManageTab(tab) {
+            document.getElementById('manage-bean-panel').style.display = tab === 'bean' ? 'block' : 'none';
+            document.getElementById('manage-equip-panel').style.display = tab === 'equip' ? 'block' : 'none';
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // --- 1. 日誌相關邏輯 ---
+        
+        async function loadLogs() {
+            document.getElementById('loadingLogs').style.display = 'block';
+            try {
+                const res = await fetch(`${API_URL}/logs?user_id=${USER_ID}`);
+                gData.logs = await res.json();
+                renderLogs(true); // 載入後重置回第一頁
+            } catch(e) { console.error(e); }
+            finally { document.getElementById('loadingLogs').style.display = 'none'; }
+        }
+
+        function renderLogs(resetPage = false) {
+            const txt = document.getElementById('searchInput').value.toLowerCase();
+            const rating = document.getElementById('searchRating').value;
+            const container = document.getElementById('logListContainer');
+            const paginationDiv = document.getElementById('paginationControls');
+
+            // 1. 篩選
+            const filtered = gData.logs.filter(l => {
+                const matchTxt = (l.bean_name||"").toLowerCase().includes(txt) || (l.flavor_notes||"").toLowerCase().includes(txt);
+                const matchR = rating ? l.rating >= parseInt(rating) : true;
+                return matchTxt && matchR;
+            });
+
+            // 排序
+            filtered.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            // 2. 分頁計算 (NEW)
+            if (resetPage) currentPage = 1;
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = filtered.slice(start, end);
+
+            // 3. 渲染
+            if (paginatedItems.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#999; margin-top:20px;'>沒有符合的紀錄</p>";
+                paginationDiv.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = paginatedItems.map(l => `
+                <div class="card log-card" onclick="openLogForm('${l.log_id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">${l.bean_name}</div>
+                        <div class="rating-star">★ ${l.rating}</div>
+                    </div>
+                    <div style="margin-top:5px; font-size:0.9rem; color:#666;">
+                        <span class="tag">${l.grinder_name}</span>
+                        <span class="tag">${l.brewer_name}</span>
+                    </div>
+                    <p style="font-size:0.95rem; margin-top:10px;">${l.flavor_notes || "無筆記"}</p>
+                    <div style="text-align:right; font-size:0.8rem; color:#aaa; margin-top:10px;">
+                        ${new Date(l.timestamp).toLocaleDateString()} ${new Date(l.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </div>
+                </div>
+            `).join('');
+
+            // 4. 更新分頁控制 UI
+            paginationDiv.style.display = 'flex';
+            document.getElementById('pageInfo').innerText = `第 ${currentPage} 頁 / 共 ${totalPages} 頁`;
+            document.getElementById('btnPrev').disabled = (currentPage === 1);
+            document.getElementById('btnNext').disabled = (currentPage === totalPages);
+        }
+
+        // 換頁函數 (NEW)
+        function changePage(delta) {
+            currentPage += delta;
+            renderLogs(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openLogForm(logId = null) {
+            document.getElementById('btnDeleteLog').style.display = logId ? 'block' : 'none';
+            
+            if (logId) {
+                const log = gData.logs.find(l => l.log_id === logId);
+                document.getElementById('logFormTitle').innerText = "編輯紀錄";
+                document.getElementById('logId').value = log.log_id;
+                document.getElementById('logTimestamp').value = log.timestamp;
+                document.getElementById('logBeanId').value = log.bean_id;
+                document.getElementById('logRating').value = log.rating;
+                document.getElementById('logGrinderId').value = log.grinder_id;
+                document.getElementById('logBrewerId').value = log.brewer_id;
+                document.getElementById('logNotes').value = log.flavor_notes || "";
+                document.getElementById('logTemp').value = log.water_temp || "";
+                document.getElementById('logTime').value = log.brew_time || "";
+            } else {
+                document.getElementById('logFormTitle').innerText = "新增紀錄";
+                document.getElementById('logId').value = "";
+                document.getElementById('logTimestamp').value = "";
+                document.getElementById('logBeanId').value = "";
+                document.getElementById('logNotes').value = "";
+                document.getElementById('logTemp').value = "";
+                document.getElementById('logTime').value = "";
+            }
+            switchView('log-form');
+        }
+
+        async function submitLog() {
+            const data = {
+                user_id: USER_ID,
+                bean_id: document.getElementById('logBeanId').value,
+                grinder_id: document.getElementById('logGrinderId').value,
+                brewer_id: document.getElementById('logBrewerId').value,
+                rating: parseInt(document.getElementById('logRating').value),
+                flavor_notes: document.getElementById('logNotes').value,
+                water_temp: document.getElementById('logTemp').value,
+                brew_time: document.getElementById('logTime').value,
+                log_id: document.getElementById('logId').value || undefined,
+                timestamp: document.getElementById('logTimestamp').value || undefined
+            };
+
+            showToast("處理中...");
+            await fetch(`${API_URL}/logs`, { method: 'POST', body: JSON.stringify(data) });
+            
+            showToast("✅ 儲存成功！");
+            await loadLogs();
+            switchView('home');
+        }
+
+        async function deleteLog() {
+            if(!confirm("確定要刪除這筆紀錄嗎？")) return;
+            
+            const logId = document.getElementById('logId').value;
+            const timestamp = document.getElementById('logTimestamp').value;
+            const userId = USER_ID;
+
+            // 構建 Query String
+            const params = new URLSearchParams({
+                log_id: logId,
+                timestamp: timestamp,
+                user_id: userId
+            });
+
+            // 改用 DELETE 方法，參數帶在網址後
+            await fetch(`${API_URL}/logs?${params.toString()}`, { 
+                method: 'DELETE' 
+            });
+
+            showToast("已刪除");
+            await loadLogs();
+            switchView('home');
+        }
+
+        // --- 2. Master Data (Bean/Equip) ---
+
+        async function loadDropdowns() {
+            try {
+                const [r1, r2] = await Promise.all([fetch(`${API_URL}/beans`), fetch(`${API_URL}/equipments`)]);
+                gData.beans = await r1.json();
+                gData.equips = await r2.json();
+                
+                const beanOpts = '<option value="">請選擇</option>' + gData.beans.map(b => `<option value="${b.bean_id}">${b.name} (${b.roast_level})</option>`).join('');
+                document.getElementById('logBeanId').innerHTML = beanOpts;
+
+                const grinders = gData.equips.filter(e => e.equip_type === 'GRINDER');
+                const brewers = gData.equips.filter(e => e.equip_type === 'BREWER');
+                
+                document.getElementById('logGrinderId').innerHTML = '<option value="">無</option>' + grinders.map(e => `<option value="${e.equip_id}">${e.name}</option>`).join('');
+                document.getElementById('logBrewerId').innerHTML = '<option value="">無</option>' + brewers.map(e => `<option value="${e.equip_id}">${e.name}</option>`).join('');
+                
+                renderMasterLists();
+            } catch(e) { console.error(e); }
+        }
+
+        function renderMasterLists() {
+            document.getElementById('beanList').innerHTML = gData.beans.map(b => `
+                <div class="manage-item">
+                    <div>
+                        <strong>${b.name}</strong> <span style="font-size:0.8rem; color:#666;">${b.roaster||''}</span>
+                        <div style="font-size:0.8rem; color:#999;">${b.roast_date || '無烘焙日'} | ${b.flavor_profile||'無描述'}</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-edit" onclick="openMasterForm('bean', '${b.bean_id}')">改</button>
+                        <button class="btn-delete" onclick="prepareDeleteMaster('bean', '${b.bean_id}')">刪</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('equipList').innerHTML = gData.equips.map(e => `
+                <div class="manage-item">
+                    <div>
+                        <strong>${e.name}</strong> <span class="tag">${e.equip_type}</span>
+                        <div style="font-size:0.8rem; color:#999;">${e.brand||''} | ${e.description||''}</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-edit" onclick="openMasterForm('equip', '${e.equip_id}')">改</button>
+                        <button class="btn-delete" onclick="prepareDeleteMaster('equip', '${e.equip_id}', '${e.equip_type}')">刪</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openMasterForm(type, id=null) {
+            document.getElementById('masterType').value = type;
+            document.getElementById('masterId').value = id || "";
+            document.getElementById('btnDeleteMaster').style.display = id ? 'inline-block' : 'none';
+
+            if(type === 'bean') {
+                document.getElementById('field-bean').style.display = 'block';
+                document.getElementById('field-equip').style.display = 'none';
+                document.getElementById('masterFormTitle').innerText = id ? "修改豆子" : "新增豆子";
+                
+                if(id) {
+                    const d = gData.beans.find(b => b.bean_id === id);
+                    document.getElementById('mBeanName').value = d.name;
+                    document.getElementById('mBeanRoaster').value = d.roaster;
+                    document.getElementById('mBeanRoast').value = d.roast_level;
+                    document.getElementById('mBeanDate').value = d.roast_date || "";
+                    document.getElementById('mBeanDesc').value = d.flavor_profile || "";
+                } else {
+                    document.getElementById('mBeanName').value = "";
+                    document.getElementById('mBeanDate').value = "";
+                    document.getElementById('mBeanDesc').value = "";
+                }
+            } else {
+                document.getElementById('field-bean').style.display = 'none';
+                document.getElementById('field-equip').style.display = 'block';
+                document.getElementById('masterFormTitle').innerText = id ? "修改器材" : "新增器材";
+
+                if(id) {
+                    const d = gData.equips.find(e => e.equip_id === id);
+                    document.getElementById('mEquipType').value = d.equip_type;
+                    document.getElementById('mEquipName').value = d.name;
+                    document.getElementById('mEquipBrand').value = d.brand;
+                    document.getElementById('mEquipDesc').value = d.description || "";
+                    document.getElementById('mEquipType').disabled = true;
+                } else {
+                    document.getElementById('mEquipName').value = "";
+                    document.getElementById('mEquipBrand').value = "";
+                    document.getElementById('mEquipDesc').value = "";
+                    document.getElementById('mEquipType').disabled = false;
+                }
+            }
+            switchView('master-form');
+        }
+
+        async function submitMasterData() {
+            const type = document.getElementById('masterType').value;
+            const id = document.getElementById('masterId').value;
+            const data = { type: type, action: id ? 'update' : 'create', id: id };
+            
+            if(type === 'bean') {
+                data.name = document.getElementById('mBeanName').value;
+                data.roaster = document.getElementById('mBeanRoaster').value;
+                data.roast_level = document.getElementById('mBeanRoast').value;
+                data.roast_date = document.getElementById('mBeanDate').value;
+                data.flavor_profile = document.getElementById('mBeanDesc').value;
+            } else {
+                data.equip_type = document.getElementById('mEquipType').value;
+                data.name = document.getElementById('mEquipName').value;
+                data.brand = document.getElementById('mEquipBrand').value;
+                data.description = document.getElementById('mEquipDesc').value;
+            }
+
+            showToast("儲存中...");
+            await fetch(`${API_URL}/manage`, { method: 'POST', body: JSON.stringify(data) });
+            showToast("成功");
+            await loadDropdowns();
+            switchView('manage');
+        }
+
+        async function prepareDeleteMaster(type, id, subKey=null) {
+            if(!confirm("確定要刪除嗎？")) return;
+            
+            const params = new URLSearchParams({
+                type: type,
+                id: id
+            });
+            // 如果是器材，需要額外帶 equip_type
+            if(type === 'equip' && subKey) {
+                params.append('equip_type', subKey);
+            }
+
+            // 改用 DELETE 方法
+            await fetch(`${API_URL}/manage?${params.toString()}`, { 
+                method: 'DELETE' 
+            });
+            
+            showToast("已刪除");
+            await loadDropdowns(); // 重新整理列表
+        }
+
+        async function deleteMasterData() {
+            const type = document.getElementById('masterType').value;
+            const id = document.getElementById('masterId').value;
+            const equipType = document.getElementById('mEquipType').value;
+            await prepareDeleteMaster(type, id, equipType);
+            switchView('manage');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = "show";
+            setTimeout(()=>t.className = t.className.replace("show", ""), 3000);
+        }
+    </script>
+</body>
+</html>
